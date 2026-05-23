@@ -256,6 +256,24 @@ button {
   margin-bottom: 10px;
 }
 
+/* ===== Excluded Ingredients Notice ===== */
+.excluded-notice {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.excluded-notice strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 13px;
+}
+
 /* ===== Pizza Quick-Select ===== */
 .pizza-grid {
   display: grid;

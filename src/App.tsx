@@ -6,8 +6,13 @@ import './App.css'
 const STAFF: string[] = Array.from({ length: 25 }, (_, i) => `Persona ${i + 1}`)
 
 const PIZZAS = [
-  'Margherita', 'Diavola', 'Quattro Stagioni', 'Prosciutto e Funghi',
-  'Capricciosa', 'Marinara', 'Tonno', 'Napoli', 'Calzone', 'Bufala',
+  'Margherita', 'Diavola', 'Quattro Stagioni', 'Prosciutto Cotto e Funghi',
+  'Capricciosa', 'Marinara', 'Tonno', 'Napoli', 'Calzone', 'Salsiccia',
+  'Ortolana', 'Wurstel e Patatine',
+]
+
+const EXCLUDED_INGREDIENTS = [
+  'Crudo', 'Bufala', 'Gamberetti', 'Burrata', 'Porcini', 'Bresaola',
 ]
 
 type Orders = Record<string, string>
@@ -125,6 +130,11 @@ export default function App() {
                 Ordine attuale: <strong>{orders[selected]}</strong>
               </div>
             )}
+
+            <div className="excluded-notice">
+              <strong>⚠️ Ingredienti NON compresi:</strong>{' '}
+              {EXCLUDED_INGREDIENTS.join(', ')}
+            </div>
 
             <p className="modal-label">Scegli la tua pizza</p>
 
