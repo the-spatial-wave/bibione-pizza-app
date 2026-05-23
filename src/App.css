@@ -330,109 +330,80 @@ button {
   border-color: var(--primary);
 }
 
-.custom-ok {
-  padding: 10px 20px;
+/* ===== Aggiunte Section ===== */
+.aggiunte-section {
+  margin-bottom: 14px;
+  animation: fadeInUp 0.25s ease;
+}
+
+.aggiunte-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--success);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  background: #F0FFF4;
+  transition: border-color 0.2s;
+}
+
+.aggiunte-input:focus {
+  border-color: var(--success-dark);
+}
+
+/* ===== Separator ===== */
+.separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.separator::before,
+.separator::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ===== Order Preview ===== */
+.order-preview {
+  background: linear-gradient(135deg, #FFF5EB, #FFFBF5);
+  border: 2px solid var(--primary);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  text-align: center;
+  margin-bottom: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ===== Submit Button ===== */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
   background: var(--primary);
   color: #fff;
   border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: 14px;
-  transition: background 0.2s;
+  font-size: 16px;
+  transition: all 0.2s;
+  margin-bottom: 8px;
 }
 
-.custom-ok:hover {
+.submit-btn:hover {
   background: var(--primary-dark);
+  transform: scale(1.02);
 }
 
-.custom-ok:disabled {
+.submit-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-/* ===== Add to Menu ===== */
-.add-menu-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
-}
-
-.add-menu-row input {
-  flex: 1;
-  padding: 9px 12px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  outline: none;
-  font-family: inherit;
-  transition: border-color 0.2s;
-}
-
-.add-menu-row input:focus {
-  border-color: var(--success);
-}
-
-.add-menu-btn {
-  padding: 9px 14px;
-  background: var(--success);
-  color: #fff;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: 13px;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-
-.add-menu-btn:hover {
-  background: var(--success-dark);
-}
-
-.add-menu-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* ===== Extra Pizzas Tags ===== */
-.extra-list {
-  margin-bottom: 12px;
-}
-
-.extra-label {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  font-weight: 500;
-}
-
-.extra-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #E6FFFA;
-  border: 1px solid #B2F5EA;
-  color: var(--success-dark);
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 8px 3px 10px;
-  border-radius: 14px;
-  margin: 0 6px 6px 0;
-}
-
-.extra-remove {
-  font-size: 10px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--danger);
-  transition: background 0.2s;
-}
-
-.extra-remove:hover {
-  background: #FEE2E2;
+  transform: none;
 }
 
 /* ===== Remove Order ===== */
