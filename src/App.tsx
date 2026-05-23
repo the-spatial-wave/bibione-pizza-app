@@ -20,6 +20,7 @@ type Orders = Record<string, string>
 
 export default function App() {
   const [orders, setOrders] = useState<Orders>({})
+  const [sessionOpen, setSessionOpen] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [basePizza, setBasePizza] = useState<string | null>(null)
   const [aggiunte, setAggiunte] = useState('')
@@ -34,11 +35,17 @@ export default function App() {
 
   useEffect(() => {
     if (isFirebaseConfigured && db) {
-      return onValue(ref(db, 'orders'), snap => setOrders(snap.val() || {}))
+      onValue(ref(db, 'orders'), snap => setOrders(snap.val() || {}))
+      onValue(ref(db, 'sessionOpen'), snap => setSessionOpen(snap.val() ?? false))
+      return
     }
     const saved = localStorage.getItem('pizza-orders')
     if (saved) {
       try { setOrders(JSON.parse(saved)) } catch { /* ignore */ }
+    }
+    const savedSession = localStorage.getItem('pizza-session-open')
+    if (savedSession !== null) {
+      setSessionOpen(savedSession === 'true')
     }
   }, [])
 
@@ -48,7 +55,35 @@ export default function App() {
     }
   }, [orders])
 
+  useEffect(() => {
+    if (!isFirebaseConfigured) {
+      localStorage.setItem('pizza-session-open', String(sessionOpen))
+    }
+  }, [sessionOpen])
+
+  const toggleSession = async () => {
+    if (sessionOpen) {
+      if (!confirm('Chiudere la sessione? Nessuno potrà più ordinare.')) return
+    } else {
+      if (Object.keys(orders).length > 0) {
+        if (!confirm('Aprire una nuova sessione? Gli ordini precedenti verranno cancellati.')) return
+        if (isFirebaseConfigured && db) {
+          await remove(ref(db, 'orders'))
+        } else {
+          setOrders({})
+        }
+      }
+    }
+    const newState = !sessionOpen
+    if (isFirebaseConfigured && db) {
+      await set(ref(db, 'sessionOpen'), newState)
+    } else {
+      setSessionOpen(newState)
+    }
+  }
+
   const openModal = (name: string) => {
+    if (!sessionOpen) return
     setSelected(name)
     setBasePizza(null)
     setAggiunte('')
@@ -89,16 +124,6 @@ export default function App() {
     setSelected(null)
   }, [selected])
 
-  const resetAll = async () => {
-    if (!confirm('Cancellare tutti gli ordini e iniziare una nuova sessione?')) return
-    if (isFirebaseConfigured && db) {
-      await remove(ref(db, 'orders'))
-    } else {
-      setOrders({})
-      localStorage.removeItem('pizza-orders')
-    }
-  }
-
   const summary = Object.values(orders).reduce<Record<string, number>>((acc, p) => {
     acc[p] = (acc[p] || 0) + 1
     return acc
@@ -112,28 +137,42 @@ export default function App() {
         <div className="hero-emoji">🍕</div>
         <h1>Pizza Night</h1>
         <p className="subtitle">Bibione Staff</p>
-        <div className="counter-pill">
-          <span className="counter-num">{total}</span>
-          <span className="counter-sep">/</span>
-          <span className="counter-den">{STAFF.length}</span>
+        <div className={`session-badge ${sessionOpen ? 'open' : 'closed'}`}>
+          {sessionOpen ? '🟢 Sessione aperta — ordina!' : '🔴 Sessione chiusa'}
         </div>
+        {sessionOpen && (
+          <div className="counter-pill">
+            <span className="counter-num">{total}</span>
+            <span className="counter-sep">/</span>
+            <span className="counter-den">{STAFF.length}</span>
+          </div>
+        )}
         {!isFirebaseConfigured && <span className="demo-badge">demo locale</span>}
       </header>
 
-      <section className="grid">
-        {STAFF.map((name, i) => (
-          <button
-            key={name}
-            className={`card${orders[name] ? ' done' : ''}${flash === name ? ' flash' : ''}`}
-            style={{ animationDelay: `${i * 30}ms` }}
-            onClick={() => openModal(name)}
-          >
-            <span className="card-icon">{orders[name] ? '🍕' : '👤'}</span>
-            <span className="card-name">{name}</span>
-            {orders[name] && <span className="card-pizza">{orders[name]}</span>}
-          </button>
-        ))}
-      </section>
+      {!sessionOpen && total === 0 && (
+        <div className="closed-message">
+          <p>La sessione è chiusa.</p>
+          <p>Quando il pizzaiolo apre una nuova sessione potrai ordinare la tua pizza.</p>
+        </div>
+      )}
+
+      {(sessionOpen || total > 0) && (
+        <section className="grid">
+          {STAFF.map((name, i) => (
+            <button
+              key={name}
+              className={`card${orders[name] ? ' done' : ''}${flash === name ? ' flash' : ''}${!sessionOpen ? ' disabled' : ''}`}
+              style={{ animationDelay: `${i * 30}ms` }}
+              onClick={() => openModal(name)}
+            >
+              <span className="card-icon">{orders[name] ? '🍕' : '👤'}</span>
+              <span className="card-name">{name}</span>
+              {orders[name] && <span className="card-pizza">{orders[name]}</span>}
+            </button>
+          ))}
+        </section>
+      )}
 
       {selected && (
         <div className="overlay" onClick={() => setSelected(null)}>
@@ -257,8 +296,11 @@ export default function App() {
           </div>
         )}
 
-        <button className="reset-btn" onClick={resetAll}>
-          🔄 Nuova Sessione
+        <button
+          className={`session-toggle ${sessionOpen ? 'is-open' : 'is-closed'}`}
+          onClick={toggleSession}
+        >
+          {sessionOpen ? '🔒 Chiudi Sessione' : '🔓 Apri Nuova Sessione'}
         </button>
       </section>
 

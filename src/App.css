@@ -103,6 +103,45 @@ button {
   font-weight: 500;
 }
 
+/* ===== Session Badge ===== */
+.session-badge {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 8px 20px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 700;
+  animation: fadeIn 0.3s ease;
+}
+
+.session-badge.open {
+  background: #D1FAE5;
+  color: #065F46;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.session-badge.closed {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+/* ===== Closed Message ===== */
+.closed-message {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  animation: fadeInUp 0.4s ease;
+}
+
+.closed-message p:first-child {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
 .demo-badge {
   display: block;
   margin: 10px auto 0;
@@ -159,6 +198,12 @@ button {
 
 .card.flash {
   animation: cardPulse 0.6s ease;
+}
+
+.card.disabled {
+  opacity: 0.6;
+  cursor: default;
+  pointer-events: none;
 }
 
 .card-icon {
@@ -538,22 +583,36 @@ button {
   border-radius: 8px;
 }
 
-/* ===== Reset Button ===== */
-.reset-btn {
+/* ===== Session Toggle Button ===== */
+.session-toggle {
   display: block;
-  margin: 20px auto 0;
-  padding: 12px 28px;
-  background: #FEE2E2;
-  color: var(--danger);
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   transition: all 0.25s;
 }
 
-.reset-btn:hover {
+.session-toggle.is-open {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.session-toggle.is-open:hover {
   background: #FECACA;
-  transform: scale(1.04);
+}
+
+.session-toggle.is-closed {
+  background: #D1FAE5;
+  color: #065F46;
+  box-shadow: 0 3px 12px rgba(16, 185, 129, 0.25);
+}
+
+.session-toggle.is-closed:hover {
+  background: #A7F3D0;
+  transform: scale(1.02);
 }
 
 /* ===== Footer ===== */
