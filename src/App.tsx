@@ -18,9 +18,30 @@ const EXCLUDED_INGREDIENTS = [
 
 type Orders = Record<string, string>
 
+interface SessionInfo {
+  open: boolean
+  by: string
+  at: string
+}
+
+function formatDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 export default function App() {
-  const [orders, setOrders] = useState<Orders>({})
-  const [sessionOpen, setSessionOpen] = useState(false)
+  const [orders, setOrders] = useState<Orders>(() => {
+    if (isFirebaseConfigured) return {}
+    try { return JSON.parse(localStorage.getItem('pizza-orders') || '{}') } catch { return {} }
+  })
+  const [sessionOpen, setSessionOpen] = useState(() => {
+    if (isFirebaseConfigured) return false
+    return localStorage.getItem('pizza-session-open') === 'true'
+  })
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(() => {
+    if (isFirebaseConfigured) return null
+    try { return JSON.parse(localStorage.getItem('pizza-session-info') || 'null') } catch { return null }
+  })
   const [selected, setSelected] = useState<string | null>(null)
   const [basePizza, setBasePizza] = useState<string | null>(null)
   const [aggiunte, setAggiunte] = useState('')
@@ -37,15 +58,7 @@ export default function App() {
     if (isFirebaseConfigured && db) {
       onValue(ref(db, 'orders'), snap => setOrders(snap.val() || {}))
       onValue(ref(db, 'sessionOpen'), snap => setSessionOpen(snap.val() ?? false))
-      return
-    }
-    const saved = localStorage.getItem('pizza-orders')
-    if (saved) {
-      try { setOrders(JSON.parse(saved)) } catch { /* ignore */ }
-    }
-    const savedSession = localStorage.getItem('pizza-session-open')
-    if (savedSession !== null) {
-      setSessionOpen(savedSession === 'true')
+      onValue(ref(db, 'sessionInfo'), snap => setSessionInfo(snap.val() || null))
     }
   }, [])
 
@@ -62,6 +75,10 @@ export default function App() {
   }, [sessionOpen])
 
   const toggleSession = async () => {
+    const action = sessionOpen ? 'chiudere' : 'aprire'
+    const nome = prompt(`Chi sei? (per ${action} la sessione)`)
+    if (!nome || !nome.trim()) return
+
     if (sessionOpen) {
       if (!confirm('Chiudere la sessione? Nessuno potrà più ordinare.')) return
     } else {
@@ -74,11 +91,21 @@ export default function App() {
         }
       }
     }
+
     const newState = !sessionOpen
+    const info: SessionInfo = {
+      open: newState,
+      by: nome.trim(),
+      at: formatDate(new Date()),
+    }
+
     if (isFirebaseConfigured && db) {
       await set(ref(db, 'sessionOpen'), newState)
+      await set(ref(db, 'sessionInfo'), info)
     } else {
       setSessionOpen(newState)
+      setSessionInfo(info)
+      localStorage.setItem('pizza-session-info', JSON.stringify(info))
     }
   }
 
@@ -140,6 +167,11 @@ export default function App() {
         <div className={`session-badge ${sessionOpen ? 'open' : 'closed'}`}>
           {sessionOpen ? '🟢 Sessione aperta — ordina!' : '🔴 Sessione chiusa'}
         </div>
+        {sessionInfo && (
+          <p className="session-info">
+            {sessionInfo.open ? 'Aperta' : 'Chiusa'} da <strong>{sessionInfo.by}</strong> il {sessionInfo.at}
+          </p>
+        )}
         {sessionOpen && (
           <div className="counter-pill">
             <span className="counter-num">{total}</span>
