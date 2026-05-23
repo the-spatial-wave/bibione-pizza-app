@@ -5,7 +5,7 @@ import './App.css'
 
 const STAFF: string[] = Array.from({ length: 25 }, (_, i) => `Persona ${i + 1}`)
 
-const PIZZAS = [
+const DEFAULT_PIZZAS = [
   'Margherita', 'Diavola', '4 Formaggi', 'Bianca con Salsiccia',
   'Bianca Salsiccia e Funghi', 'Bianca Salsiccia e Patate',
   'Tonno', 'Prosciutto e Pomodorini', 'Marinara', 'Capricciosa',
@@ -23,14 +23,27 @@ export default function App() {
   const [selected, setSelected] = useState<string | null>(null)
   const [custom, setCustom] = useState('')
   const [flash, setFlash] = useState<string | null>(null)
+  const [extraPizzas, setExtraPizzas] = useState<string[]>([])
+  const [newPizzaName, setNewPizzaName] = useState('')
+
+  const allPizzas = [...DEFAULT_PIZZAS, ...extraPizzas]
 
   useEffect(() => {
     if (isFirebaseConfigured && db) {
-      return onValue(ref(db, 'orders'), snap => setOrders(snap.val() || {}))
+      onValue(ref(db, 'orders'), snap => setOrders(snap.val() || {}))
+      onValue(ref(db, 'customPizzas'), snap => {
+        const data = snap.val()
+        setExtraPizzas(data ? Object.values(data) as string[] : [])
+      })
+      return
     }
     const saved = localStorage.getItem('pizza-orders')
     if (saved) {
       try { setOrders(JSON.parse(saved)) } catch { /* ignore */ }
+    }
+    const savedPizzas = localStorage.getItem('pizza-custom-menu')
+    if (savedPizzas) {
+      try { setExtraPizzas(JSON.parse(savedPizzas)) } catch { /* ignore */ }
     }
   }, [])
 
@@ -40,9 +53,19 @@ export default function App() {
     }
   }, [orders])
 
+  useEffect(() => {
+    if (!isFirebaseConfigured) {
+      localStorage.setItem('pizza-custom-menu', JSON.stringify(extraPizzas))
+    }
+  }, [extraPizzas])
+
   const openModal = (name: string) => {
     setSelected(name)
     setCustom(orders[name] || '')
+  }
+
+  const fillPizza = (pizza: string) => {
+    setCustom(pizza)
   }
 
   const submitOrder = useCallback(async (pizza: string) => {
@@ -73,6 +96,33 @@ export default function App() {
     setSelected(null)
     setCustom('')
   }, [selected])
+
+  const addPizzaToMenu = async () => {
+    const name = newPizzaName.trim()
+    if (!name) return
+    if (allPizzas.some(p => p.toLowerCase() === name.toLowerCase())) {
+      setNewPizzaName('')
+      return
+    }
+    if (isFirebaseConfigured && db) {
+      const idx = extraPizzas.length
+      await set(ref(db, `customPizzas/${idx}`), name)
+    } else {
+      setExtraPizzas(prev => [...prev, name])
+    }
+    setNewPizzaName('')
+  }
+
+  const removeFromMenu = async (pizza: string) => {
+    const idx = extraPizzas.indexOf(pizza)
+    if (idx === -1) return
+    if (isFirebaseConfigured && db) {
+      const updated = extraPizzas.filter((_, i) => i !== idx)
+      await set(ref(db, 'customPizzas'), updated.length > 0 ? updated : null)
+    } else {
+      setExtraPizzas(prev => prev.filter((_, i) => i !== idx))
+    }
+  }
 
   const resetAll = async () => {
     if (!confirm('Cancellare tutti gli ordini e iniziare una nuova sessione?')) return
@@ -137,11 +187,15 @@ export default function App() {
               {EXCLUDED_INGREDIENTS.join(', ')}
             </div>
 
-            <p className="modal-label">Scegli la tua pizza</p>
+            <p className="modal-label">Tocca una pizza per selezionarla, poi modifica se vuoi</p>
 
             <div className="pizza-grid">
-              {PIZZAS.map(p => (
-                <button key={p} className="pizza-btn" onClick={() => submitOrder(p)}>
+              {allPizzas.map(p => (
+                <button
+                  key={p}
+                  className={`pizza-btn${custom === p ? ' selected' : ''}`}
+                  onClick={() => fillPizza(p)}
+                >
                   {p}
                 </button>
               ))}
@@ -150,7 +204,7 @@ export default function App() {
             <div className="custom-row">
               <input
                 type="text"
-                placeholder="Oppure scrivi qui..."
+                placeholder="Scrivi o modifica la tua pizza..."
                 value={custom}
                 onChange={e => setCustom(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && submitOrder(custom)}
@@ -161,9 +215,38 @@ export default function App() {
                 onClick={() => submitOrder(custom)}
                 disabled={!custom.trim()}
               >
-                OK
+                Ordina
               </button>
             </div>
+
+            <div className="add-menu-row">
+              <input
+                type="text"
+                placeholder="Nuova pizza per il menu..."
+                value={newPizzaName}
+                onChange={e => setNewPizzaName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && addPizzaToMenu()}
+              />
+              <button
+                className="add-menu-btn"
+                onClick={addPizzaToMenu}
+                disabled={!newPizzaName.trim()}
+              >
+                + Aggiungi
+              </button>
+            </div>
+
+            {extraPizzas.length > 0 && (
+              <div className="extra-list">
+                <p className="extra-label">Pizze aggiunte al menu:</p>
+                {extraPizzas.map(p => (
+                  <span key={p} className="extra-tag">
+                    {p}
+                    <button className="extra-remove" onClick={() => removeFromMenu(p)}>✕</button>
+                  </span>
+                ))}
+              </div>
+            )}
 
             {orders[selected] && (
               <button className="remove-btn" onClick={removeOrder}>
