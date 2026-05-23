@@ -6,9 +6,10 @@ import './App.css'
 const STAFF: string[] = Array.from({ length: 25 }, (_, i) => `Persona ${i + 1}`)
 
 const PIZZAS = [
-  'Margherita', 'Diavola', 'Quattro Stagioni', 'Prosciutto Cotto e Funghi',
-  'Capricciosa', 'Marinara', 'Tonno', 'Napoli', 'Calzone', 'Salsiccia',
-  'Ortolana', 'Wurstel e Patatine',
+  'Margherita', 'Diavola', '4 Formaggi', 'Bianca con Salsiccia',
+  'Bianca Salsiccia e Funghi', 'Bianca Salsiccia e Patate',
+  'Tonno', 'Prosciutto e Pomodorini', 'Marinara', 'Capricciosa',
+  'Gorgonzola e Salame Piccante',
 ]
 
 const EXCLUDED_INGREDIENTS = [
